@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#071a35">
+  <title>JP Sports | Inscrições</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./"><span class="brand-mark">JP</span><span>JP <b>SPORTS</b><small>INSCRIÇÕES OFICIAIS</small></span></a>
+    <a class="admin-link" href="?admin=1">Área administrativa</a>
+  </header>
+  <main class="wrap">
+    <section id="public-view">
+      <div class="hero">
+        <div class="eyebrow">EVENTOS • CORRIDA • EXPERIÊNCIA</div>
+        <h1>Seu próximo desafio<br><span>começa aqui.</span></h1>
+        <p>Inscreva-se nos treinões e eventos da JP Sports em poucos passos.</p>
+      </div>
+      <section id="event-card" class="event-card">
+        <div class="loading">Carregando evento disponível…</div>
+      </section>
+      <section class="form-card">
+        <div class="section-heading"><span class="step">01</span><div><h2>Garanta sua vaga</h2><p>Preencha seus dados para realizar a inscrição.</p></div></div>
+        <form id="registration-form">
+          <div class="grid two">
+            <label>Nome completo<input name="full_name" autocomplete="name" required maxlength="120" placeholder="Seu nome e sobrenome"></label>
+            <label>WhatsApp<input name="phone" autocomplete="tel" required maxlength="30" placeholder="(81) 99999-9999"></label>
+          </div>
+          <label>E-mail<input name="email" type="email" autocomplete="email" required maxlength="180" placeholder="seuemail@email.com"></label>
+          <div class="grid two">
+            <label>Distância<select name="distance" id="distance" required><option value="">Selecione</option><option>3 km</option><option>5 km</option></select></label>
+            <label>Inscrição<select name="package" id="package" required><option value="">Selecione</option><option value="no_shirt">Sem camisa</option><option value="with_shirt">Com camisa azul</option></select></label>
+          </div>
+          <div id="shirt-size-wrap" class="hidden">
+            <label>Tamanho da camisa<select name="shirt_size" id="shirt_size"><option value="">Selecione o tamanho</option><option>PP</option><option>P</option><option>M</option><option>G</option><option>GG</option><option> XG</option></select></label>
+          </div>
+          <div class="price-line"><span>Valor da inscrição</span><strong id="total">Selecione seu pacote</strong></div>
+          <div class="payment-options">
+            <div class="label-title">Forma de pagamento</div>
+            <label class="payment-choice"><input type="radio" name="payment_method" value="pix" checked><span><b>Pix</b><small>Chave Pix e instruções após o cadastro</small></span></label>
+            <label class="payment-choice" id="card-option"><input type="radio" name="payment_method" value="card" disabled><span><b>Cartão de crédito</b><small id="card-note">Link de cartão ainda não configurado</small></span></label>
+          </div>
+          <label class="consent"><input type="checkbox" name="consent" required><span>Autorizo o uso dos dados informados para gerenciar minha inscrição e comunicações sobre este evento. Li o aviso de privacidade.</span></label>
+          <button class="btn primary full" type="submit" id="submit-btn">Confirmar inscrição</button>
+          <p class="form-note">Seus dados são utilizados somente para a gestão da inscrição. Não solicitamos CPF nem dados do cartão.</p>
+          <div id="form-message" role="status" aria-live="polite"></div>
+        </form>
+      </section>
+      <section id="confirmation" class="confirmation hidden"></section>
+    </section>
+    <section id="admin-view" class="hidden">
+      <div class="hero compact"><div class="eyebrow">JP SPORTS • ACESSO RESTRITO</div><h1>Painel <span>administrativo</span></h1><p>Entre com a conta autorizada para gerenciar eventos e inscrições.</p></div>
+      <div id="login-card" class="form-card narrow">
+        <h2>Entrar no painel</h2>
+        <form id="login-form">
+          <label>E-mail<input name="email" type="email" required value="joaopedrotfuncional@gmail.com"></label>
+          <label>Senha<input name="password" type="password" required autocomplete="current-password"></label>
+          <button class="btn primary full" type="submit">Entrar</button>
+          <div id="login-message" role="status"></div>
+        </form>
+        <div class="mt"><button class="btn outline full" type="button" id="show-create-account">Criar minha senha de administrador</button><button class="btn outline full mt" type="button" id="show-reset-password">Esqueci minha senha</button></div>
+        <form id="create-account-form" class="hidden mt">
+          <h3>Criar acesso administrativo</h3><p class="muted">Exclusivo para o e-mail autorizado. Confirme o cadastro pelo link enviado ao seu e-mail.</p>
+          <label>E-mail<input name="email" type="email" required readonly value="joaopedrotfuncional@gmail.com"></label>
+          <label>Nova senha<input name="password" type="password" required minlength="8" autocomplete="new-password"></label>
+          <label>Confirmar senha<input name="confirm_password" type="password" required minlength="8" autocomplete="new-password"></label>
+          <button class="btn primary full" type="submit">Criar acesso</button><div id="create-account-message" role="status"></div>
+        </form>
+        <form id="reset-password-form" class="hidden mt"><h3>Recuperar senha</h3><p class="muted">Enviaremos um link para seu e-mail administrativo.</p><button class="btn primary full" type="submit">Enviar link de recuperação</button><div id="reset-password-message" role="status"></div></form>
+        <form id="update-password-form" class="hidden mt"><h3>Definir nova senha</h3><label>Nova senha<input name="password" type="password" minlength="8" required autocomplete="new-password"></label><button class="btn primary full" type="submit">Salvar nova senha</button><div id="update-password-message" role="status"></div></form>
+      </div>
+      <div id="dashboard" class="hidden">
+        <div class="dashboard-head"><div><h2>Visão geral</h2><p id="admin-email" class="muted"></p></div><button class="btn outline" id="logout-btn">Sair</button></div>
+        <div class="stats" id="stats"></div>
+        <div class="admin-grid">
+          <section class="form-card">
+            <h3>Evento ativo</h3><div id="admin-event"></div>
+            <h3 class="mt">Criar novo evento</h3>
+            <form id="event-form">
+              <label>Nome do evento<input name="name" required placeholder="Nome do treinão"></label>
+              <div class="grid two"><label>Data<input name="event_date" type="date" required></label><label>Local<input name="location" required></label></div>
+              <div class="grid two"><label>Concentração<input name="gathering" value="05:00"></label><label>Largada<input name="start_time" value="05:30"></label></div>
+              <div class="grid two"><label>Preço sem camisa (R$)<input name="price_no_shirt" type="number" min="0" step=".01" value="59.90" required></label><label>Preço com camisa (R$)<input name="price_with_shirt" type="number" min="0" step=".01" value="99.90" required></label></div>
+              <button class="btn primary full" type="submit">Salvar e ativar evento</button>
+              <div id="event-message" role="status"></div>
+            </form>
+          </section>
+          <section class="form-card">
+            <h3>Configurações de pagamento</h3>
+            <form id="settings-form">
+              <label>Chave Pix<input name="pix_key" value="52.244.653/0001-10" required></label>
+              <label>WhatsApp<input name="whatsapp" value="(81) 99951-0223" required></label>
+              <label>Link de pagamento no cartão<input name="card_checkout_url" type="url" placeholder="https://…"></label>
+              <button class="btn primary full" type="submit">Salvar configurações</button>
+              <div id="settings-message" role="status"></div>
+            </form>
+          </section>
+        </div>
+        <section class="form-card">
+          <div class="dashboard-head"><div><h3>Inscrições recebidas</h3><p class="muted">Dados visíveis somente para o administrador.</p></div><button class="btn outline" id="csv-btn">Exportar CSV</button></div>
+          <div class="table-wrap"><table><thead><tr><th>Participante</th><th>Contato</th><th>Distância</th><th>Pacote</th><th>Pagamento</th><th>Status</th><th>Ação</th></tr></thead><tbody id="registrations-body"><tr><td colspan="7">Carregando…</td></tr></tbody></table></div>
+        </section>
+      </div>
+    </section>
+  </main>
+  <footer><span>JP SPORTS</span><span>Movimento, saúde e superação.</span></footer>
+  <script src="./app.js"></script>
+</body>
+</html>
