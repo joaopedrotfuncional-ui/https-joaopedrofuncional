@@ -1,24 +1,25 @@
-JP SPORTS — VERSÃO SEM SUPABASE
+JP SPORTS - INSCRIÇÕES COM GOOGLE SHEETS
 
-Esta versão não usa Supabase nem banco de dados. O formulário encaminha os dados
-preenchidos para o WhatsApp da organização (+55 81 99951-0223).
+IMPORTANTE: o site estático do GitHub Pages não armazena inscritos por conta própria. Esta versão usa uma planilha Google + Google Apps Script como backend.
 
-COMO PUBLICAR
-1. Extraia este ZIP.
-2. Envie TODOS os arquivos desta pasta para a raiz do repositório GitHub.
-3. Em Settings > Pages, selecione Deploy from a branch, branch main e /(root).
-4. Aguarde a publicação.
+CONFIGURAÇÃO
+1) Crie uma planilha Google vazia em https://sheets.google.com.
+2) Na planilha, abra Extensões > Apps Script.
+3) Apague o conteúdo de Code.gs e cole o arquivo Code.gs deste pacote. Salve.
+4) Antes de implantar, abra Configurações do projeto > Propriedades do script > Adicionar propriedade. Nome: ADMIN_SETUP_CODE. Valor: crie um código aleatório longo e guarde-o. Salve.
+5) Clique em Implantar > Nova implantação > Aplicativo da web.
+6) Executar como: Eu. Quem pode acessar: Qualquer pessoa. Clique Implantar e autorize.
+7) Copie a URL do aplicativo da web (termina em /exec).
+8) Cole essa URL em config.js no campo GOOGLE_SCRIPT_URL.
+9) Envie todos os arquivos para a raiz do repositório GitHub Pages e faça commit.
+10) Abra o site, clique Área ADM e depois Criar senha de administrador. Informe o código inicial ADMIN_SETUP_CODE e crie uma senha forte com pelo menos 10 caracteres.
+11) A partir daí, use Área ADM para entrar e ver inscritos. É possível exportar CSV.
 
-IMPORTANTE
-- Ao enviar o formulário, o navegador abre o WhatsApp com uma mensagem pronta.
-- O participante ainda precisa apertar ENVIAR no WhatsApp.
-- A inscrição só será confirmada pela organização após retorno e confirmação do pagamento.
-- Não há painel administrativo, banco de dados ou lista automática de inscritos.
-- Para manter uma lista centralizada e exportável, será necessário um serviço de armazenamento/backend.
+A planilha cria automaticamente a aba Inscritos quando chega a primeira inscrição. Os dados ficam na sua planilha Google.
 
-EVENTO CONFIGURADO
-Treinão Novembro Azul do JP — 29/11/2026
-Mercado da Torre – Live | Concentração 05:00 | Largada 05:30
-Distâncias: 3 km e 5 km
-Sem camisa: R$ 59,90 | Com camisa azul: R$ 99,90
-Pix: 52.244.653/0001-10
+SEGURANÇA
+- Não compartilhe a planilha publicamente.
+- O script deve executar como proprietário e acesso como Qualquer pessoa para receber inscrições do site público.
+- O código ADMIN_SETUP_CODE é de uso único e é apagado após a criação da senha. A senha administrativa é armazenada como hash SHA-256 nas propriedades do script; sessão administrativa expira em até 6 horas.
+- Como GitHub Pages é hospedagem estática, o endpoint do Apps Script é necessário para persistir e consultar os dados.
+- Guarde a URL /exec em local privado; se houver abuso, crie uma nova implantação e atualize config.js.

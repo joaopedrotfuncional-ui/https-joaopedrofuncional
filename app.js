@@ -1,47 +1,18 @@
 (() => {
-  const $ = (id) => document.getElementById(id);
-  const form = $("registration-form");
-  const packageSelect = $("package");
-  const sizeWrap = $("shirt-size-wrap");
-  const sizeSelect = $("shirt_size");
-  const total = $("total");
-  const prices = { no_shirt: 59.90, with_shirt: 99.90 };
-  const whatsappNumber = "5581999510223";
-  const pixKey = "52.244.653/0001-10";
-  const money = value => Number(value).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-
-  function updatePackage() {
-    const selected = packageSelect.value;
-    const hasShirt = selected === "with_shirt";
-    sizeWrap.classList.toggle("hidden", !hasShirt);
-    sizeSelect.required = hasShirt;
-    total.textContent = prices[selected] ? money(prices[selected]) : "Selecione seu pacote";
-  }
-  packageSelect.addEventListener("change", updatePackage);
-
-  form.addEventListener("submit", event => {
-    event.preventDefault();
-    if (!form.reportValidity()) return;
-    const data = new FormData(form);
-    const packageName = data.get("package") === "with_shirt" ? "Com camisa azul" : "Sem camisa";
-    const amount = prices[data.get("package")];
-    const message = [
-      "Olá! Quero solicitar minha inscrição no Treinão Novembro Azul do JP.",
-      "",
-      `Nome: ${data.get("full_name")}`,
-      `WhatsApp: ${data.get("phone")}`,
-      `E-mail: ${data.get("email")}`,
-      `Distância: ${data.get("distance")}`,
-      `Pacote: ${packageName}`,
-      ...(data.get("package") === "with_shirt" ? [`Tamanho da camisa: ${data.get("shirt_size")}`] : []),
-      `Valor: ${money(amount)}`,
-      "Pagamento: Pix",
-      `Chave Pix (CNPJ): ${pixKey}`,
-      "",
-      "Estou ciente de que a inscrição será confirmada após o retorno da organização e a confirmação do pagamento."
-    ].join("\n");
-    const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-    window.open(url, "_blank", "noopener,noreferrer");
-  });
-  updatePackage();
+ const $=id=>document.getElementById(id), endpoint=window.JP_CONFIG?.GOOGLE_SCRIPT_URL||'', form=$('registration-form'), apiForm=$('api-form'), frame=$('jp-api-frame');
+ const prices={no_shirt:59.90,with_shirt:99.90}; let sessionToken='', rows=[];
+ const money=n=>Number(n).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+ function api(payload){return new Promise((resolve,reject)=>{if(!endpoint.startsWith('https://script.google.com/macros/s/')){reject(new Error('Configure a URL do Google Apps Script no arquivo config.js.'));return;}const id='jp_'+Date.now()+'_'+Math.random().toString(36).slice(2);const listener=e=>{if(e.source!==frame.contentWindow||!e.data||e.data.jpRequest!==id)return;window.removeEventListener('message',listener);if(e.data.ok)resolve(e.data.data);else reject(new Error(e.data.error||'Não foi possível concluir a operação.'));};window.addEventListener('message',listener);apiForm.action=endpoint;apiForm.payload.value=JSON.stringify({...payload,jpRequest:id});apiForm.submit();setTimeout(()=>{window.removeEventListener('message',listener);reject(new Error('Tempo esgotado. Confira a implantação do Apps Script.'));},20000);});}
+ const pkg=$('package'),sizeWrap=$('shirt-size-wrap'),size=$('shirt_size');function updatePrice(){sizeWrap.classList.toggle('hidden',pkg.value!=='with_shirt');size.required=pkg.value==='with_shirt';$('total').textContent=prices[pkg.value]?money(prices[pkg.value]):'Selecione seu pacote';}pkg.addEventListener('change',updatePrice);updatePrice();
+ form.addEventListener('submit',async e=>{e.preventDefault();if(!form.reportValidity())return;const d=Object.fromEntries(new FormData(form));const btn=$('submit-btn'),msg=$('form-message');btn.disabled=true;btn.textContent='Registrando...';try{const result=await api({action:'register',registration:{full_name:d.full_name,phone:d.phone,email:d.email,distance:d.distance,package:d.package,shirt_size:d.shirt_size||'',amount:prices[d.package]}});msg.textContent='Inscrição registrada com sucesso! Guarde o comprovante do Pix e aguarde a confirmação da organização.';msg.className='success';form.reset();updatePrice();}catch(err){msg.textContent=err.message;msg.className='error';}finally{btn.disabled=false;btn.textContent='Finalizar inscrição';}});
+ $('admin-open').onclick=()=>{$('public-view').classList.add('hidden');$('admin-view').classList.remove('hidden');window.scrollTo(0,0);};
+ $('setup-open').onclick=()=>{$('setup-form').classList.toggle('hidden');};
+ $('setup-form').addEventListener('submit',async e=>{e.preventDefault();const d=new FormData(e.currentTarget);if(d.get('password')!==d.get('confirm')){adminMsg('As senhas não conferem.');return;}try{const r=await api({action:'setup',password:d.get('password'),setup_code:d.get('setup_code')});sessionToken=r.token;showAdmin();await loadRows();}catch(err){adminMsg(err.message);}});
+ $('login-form').addEventListener('submit',async e=>{e.preventDefault();try{const r=await api({action:'login',password:new FormData(e.currentTarget).get('password')});sessionToken=r.token;$('login-form').reset();showAdmin();await loadRows();}catch(err){adminMsg(err.message);}});
+ function adminMsg(t){$('admin-message').textContent=t;}
+ function showAdmin(){$('admin-login').classList.add('hidden');$('admin-content').classList.remove('hidden');adminMsg('');}
+ async function loadRows(){try{const r=await api({action:'list',token:sessionToken});rows=r.rows||[];$('count').textContent=rows.length+' inscritos';const tbody=$('registrants').querySelector('tbody');tbody.replaceChildren();rows.forEach(x=>{const tr=document.createElement('tr');[x.full_name,x.phone,x.email,x.distance,x.package_label,x.shirt_size||'—',money(x.amount),x.created_at].forEach(v=>{const td=document.createElement('td');td.textContent=v??'';tr.appendChild(td);});tbody.appendChild(tr);});adminMsg('Lista atualizada.');}catch(err){adminMsg(err.message);}}
+ $('refresh').onclick=loadRows;$('logout').onclick=()=>{sessionToken='';rows=[];$('admin-content').classList.add('hidden');$('admin-login').classList.remove('hidden');adminMsg('Você saiu do painel.');};
+ $('export').onclick=()=>{const cols=['full_name','phone','email','distance','package_label','shirt_size','amount','created_at'];const csv=[cols.join(';'),...rows.map(r=>cols.map(k=>'"'+String(r[k]??'').replaceAll('"','""')+'"').join(';'))].join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));a.download='inscritos-jp-sports.csv';a.click();URL.revokeObjectURL(a.href);};
+ window.addEventListener('message',()=>{});
 })();
