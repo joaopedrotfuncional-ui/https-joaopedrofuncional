@@ -1,18 +1,146 @@
 (() => {
- const $=id=>document.getElementById(id), endpoint=window.JP_CONFIG?.GOOGLE_SCRIPT_URL||'', form=$('registration-form'), apiForm=$('api-form'), frame=$('jp-api-frame');
- const prices={no_shirt:59.90,with_shirt:99.90}; let sessionToken='', rows=[];
- const money=n=>Number(n).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
- function api(payload){return new Promise((resolve,reject)=>{if(!endpoint.startsWith('https://script.google.com/macros/s/')){reject(new Error('Configure a URL do Google Apps Script no arquivo config.js.'));return;}const id='jp_'+Date.now()+'_'+Math.random().toString(36).slice(2);const listener=e=>{if(e.source!==frame.contentWindow||!e.data||e.data.jpRequest!==id)return;window.removeEventListener('message',listener);if(e.data.ok)resolve(e.data.data);else reject(new Error(e.data.error||'Não foi possível concluir a operação.'));};window.addEventListener('message',listener);apiForm.action=endpoint;apiForm.payload.value=JSON.stringify({...payload,jpRequest:id});apiForm.submit();setTimeout(()=>{window.removeEventListener('message',listener);reject(new Error('Tempo esgotado. Confira a implantação do Apps Script.'));},20000);});}
- const pkg=$('package'),sizeWrap=$('shirt-size-wrap'),size=$('shirt_size');function updatePrice(){sizeWrap.classList.toggle('hidden',pkg.value!=='with_shirt');size.required=pkg.value==='with_shirt';$('total').textContent=prices[pkg.value]?money(prices[pkg.value]):'Selecione seu pacote';}pkg.addEventListener('change',updatePrice);updatePrice();
- form.addEventListener('submit',async e=>{e.preventDefault();if(!form.reportValidity())return;const d=Object.fromEntries(new FormData(form));const btn=$('submit-btn'),msg=$('form-message');btn.disabled=true;btn.textContent='Registrando...';try{const result=await api({action:'register',registration:{full_name:d.full_name,phone:d.phone,email:d.email,distance:d.distance,package:d.package,shirt_size:d.shirt_size||'',amount:prices[d.package]}});msg.textContent='Inscrição registrada com sucesso! Guarde o comprovante do Pix e aguarde a confirmação da organização.';msg.className='success';form.reset();updatePrice();}catch(err){msg.textContent=err.message;msg.className='error';}finally{btn.disabled=false;btn.textContent='Finalizar inscrição';}});
- $('admin-open').onclick=()=>{$('public-view').classList.add('hidden');$('admin-view').classList.remove('hidden');window.scrollTo(0,0);};
- $('setup-open').onclick=()=>{$('setup-form').classList.toggle('hidden');};
- $('setup-form').addEventListener('submit',async e=>{e.preventDefault();const d=new FormData(e.currentTarget);if(d.get('password')!==d.get('confirm')){adminMsg('As senhas não conferem.');return;}try{const r=await api({action:'setup',password:d.get('password'),setup_code:d.get('setup_code')});sessionToken=r.token;showAdmin();await loadRows();}catch(err){adminMsg(err.message);}});
- $('login-form').addEventListener('submit',async e=>{e.preventDefault();try{const r=await api({action:'login',password:new FormData(e.currentTarget).get('password')});sessionToken=r.token;$('login-form').reset();showAdmin();await loadRows();}catch(err){adminMsg(err.message);}});
- function adminMsg(t){$('admin-message').textContent=t;}
- function showAdmin(){$('admin-login').classList.add('hidden');$('admin-content').classList.remove('hidden');adminMsg('');}
- async function loadRows(){try{const r=await api({action:'list',token:sessionToken});rows=r.rows||[];$('count').textContent=rows.length+' inscritos';const tbody=$('registrants').querySelector('tbody');tbody.replaceChildren();rows.forEach(x=>{const tr=document.createElement('tr');[x.full_name,x.phone,x.email,x.distance,x.package_label,x.shirt_size||'—',money(x.amount),x.created_at].forEach(v=>{const td=document.createElement('td');td.textContent=v??'';tr.appendChild(td);});tbody.appendChild(tr);});adminMsg('Lista atualizada.');}catch(err){adminMsg(err.message);}}
- $('refresh').onclick=loadRows;$('logout').onclick=()=>{sessionToken='';rows=[];$('admin-content').classList.add('hidden');$('admin-login').classList.remove('hidden');adminMsg('Você saiu do painel.');};
- $('export').onclick=()=>{const cols=['full_name','phone','email','distance','package_label','shirt_size','amount','created_at'];const csv=[cols.join(';'),...rows.map(r=>cols.map(k=>'"'+String(r[k]??'').replaceAll('"','""')+'"').join(';'))].join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));a.download='inscritos-jp-sports.csv';a.click();URL.revokeObjectURL(a.href);};
- window.addEventListener('message',()=>{});
+  const $ = id => document.getElementById(id);
+  const form = $('registration-form');
+  const packageSelect = $('package');
+  const sizeWrap = $('shirt-size-wrap');
+  const sizeSelect = $('shirt_size');
+  const total = $('total');
+  const prices = { no_shirt: 59.90, with_shirt: 99.90 };
+  const whatsappNumber = '5581999510223';
+  const pixKey = '52.244.653/0001-10';
+  const STORAGE_KEY = 'jp_sports_local_registrations_v1';
+  const PASSWORD_KEY = 'jp_sports_admin_password_hash_v1';
+  let authMode = 'login';
+  const money = value => Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const readRegistrations = () => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; } };
+  const saveRegistrations = rows => localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
+  const packageName = key => key === 'with_shirt' ? 'Com camisa azul' : 'Sem camisa';
+
+  function updatePackage() {
+    const selected = packageSelect.value;
+    const hasShirt = selected === 'with_shirt';
+    sizeWrap.classList.toggle('hidden', !hasShirt);
+    sizeSelect.required = hasShirt;
+    total.textContent = prices[selected] ? money(prices[selected]) : 'Selecione seu pacote';
+  }
+  packageSelect.addEventListener('change', updatePackage);
+
+  async function hashPassword(password) {
+    const bytes = new TextEncoder().encode(password);
+    const digest = await crypto.subtle.digest('SHA-256', bytes);
+    return Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  function setAuthMode(mode) {
+    authMode = mode;
+    const first = !localStorage.getItem(PASSWORD_KEY);
+    $('auth-title').textContent = first ? 'Criar senha administrativa' : 'Acesso administrativo';
+    $('auth-description').textContent = first ? 'Defina uma senha para proteger o painel neste navegador.' : 'Digite sua senha para consultar as inscrições salvas neste navegador.';
+    $('new-password-label').classList.toggle('hidden', !first);
+    $('confirm-password-label').classList.toggle('hidden', !first);
+    $('current-password-label').classList.toggle('hidden', first);
+    $('auth-submit').textContent = first ? 'Criar senha e acessar' : 'Entrar';
+    $('login-message').textContent = '';
+  }
+
+  function showAdmin() {
+    $('public-view').classList.add('hidden');
+    $('admin-view').classList.remove('hidden');
+    $('admin-auth-card').classList.remove('hidden');
+    $('admin-dashboard').classList.add('hidden');
+    setAuthMode('login');
+  }
+  function showPublic() {
+    $('admin-view').classList.add('hidden');
+    $('public-view').classList.remove('hidden');
+  }
+  $('admin-open').addEventListener('click', showAdmin);
+  $('back-public').addEventListener('click', showPublic);
+
+  $('admin-auth-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    const first = !localStorage.getItem(PASSWORD_KEY);
+    const message = $('login-message');
+    if (first) {
+      const password = $('new-password').value;
+      if (password.length < 8) { message.textContent = 'A senha precisa ter pelo menos 8 caracteres.'; return; }
+      if (password !== $('confirm-password').value) { message.textContent = 'As senhas não conferem.'; return; }
+      localStorage.setItem(PASSWORD_KEY, await hashPassword(password));
+    } else {
+      const entered = await hashPassword($('admin-password').value);
+      if (entered !== localStorage.getItem(PASSWORD_KEY)) { message.textContent = 'Senha incorreta.'; return; }
+    }
+    $('admin-auth-card').classList.add('hidden');
+    $('admin-dashboard').classList.remove('hidden');
+    renderDashboard();
+  });
+
+  function renderDashboard() {
+    const rows = readRegistrations();
+    $('stat-total').textContent = rows.length;
+    $('stat-3k').textContent = rows.filter(r => r.distance === '3 km').length;
+    $('stat-5k').textContent = rows.filter(r => r.distance === '5 km').length;
+    $('stat-shirts').textContent = rows.filter(r => r.package === 'with_shirt').length;
+    $('empty-list').classList.toggle('hidden', rows.length > 0);
+    const body = $('registrations-body');
+    body.innerHTML = '';
+    rows.slice().reverse().forEach(row => {
+      const tr = document.createElement('tr');
+      const values = [new Date(row.createdAt).toLocaleString('pt-BR'), row.name, row.phone, row.distance, packageName(row.package) + (row.shirtSize ? ` (${row.shirtSize})` : ''), money(row.amount)];
+      values.forEach(value => { const td = document.createElement('td'); td.textContent = value; tr.appendChild(td); });
+      const status = document.createElement('td');
+      const select = document.createElement('select');
+      ['Pendente','Pago'].forEach(label => { const option = document.createElement('option'); option.value = label; option.textContent = label; select.appendChild(option); });
+      select.value = row.paymentStatus || 'Pendente';
+      select.addEventListener('change', () => { const all = readRegistrations(); const target = all.find(r => r.id === row.id); if (target) target.paymentStatus = select.value; saveRegistrations(all); });
+      status.appendChild(select); tr.appendChild(status);
+      const actions = document.createElement('td');
+      const del = document.createElement('button'); del.type = 'button'; del.className = 'btn outline'; del.textContent = 'Excluir';
+      del.addEventListener('click', () => { if (confirm(`Excluir a solicitação de ${row.name} deste navegador?`)) { saveRegistrations(readRegistrations().filter(r => r.id !== row.id)); renderDashboard(); } });
+      actions.appendChild(del); tr.appendChild(actions); body.appendChild(tr);
+    });
+  }
+
+  $('admin-logout').addEventListener('click', () => { $('admin-dashboard').classList.add('hidden'); $('admin-auth-card').classList.remove('hidden'); $('admin-auth-form').reset(); setAuthMode('login'); });
+  $('export-csv').addEventListener('click', () => {
+    const rows = readRegistrations();
+    if (!rows.length) { alert('Não há inscrições para exportar neste navegador.'); return; }
+    const headers = ['Data','Nome','WhatsApp','E-mail','Distância','Pacote','Tamanho','Valor','Pagamento'];
+    const csvRows = rows.map(r => [new Date(r.createdAt).toLocaleString('pt-BR'),r.name,r.phone,r.email,r.distance,packageName(r.package),r.shirtSize || '',money(r.amount),r.paymentStatus || 'Pendente']);
+    const csv = [headers,...csvRows].map(line => line.map(v => `"${String(v ?? '').replace(/"/g,'""')}"`).join(';')).join('\r\n');
+    const blob = new Blob(['\ufeff' + csv], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'inscritos-jp-sports.csv'; a.click(); URL.revokeObjectURL(url);
+  });
+
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+    const data = new FormData(form);
+    const packageKey = data.get('package');
+    const amount = prices[packageKey];
+    const registration = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
+      createdAt: new Date().toISOString(),
+      name: String(data.get('full_name')).trim(), phone: String(data.get('phone')).trim(),
+      email: String(data.get('email')).trim(), distance: data.get('distance'), package: packageKey,
+      shirtSize: packageKey === 'with_shirt' ? data.get('shirt_size') : '', amount,
+      paymentStatus: 'Pendente'
+    };
+    const saved = readRegistrations(); saved.push(registration); saveRegistrations(saved);
+    const message = [
+      'Olá! Quero solicitar minha inscrição no Treinão Novembro Azul do JP.', '',
+      `Nome: ${registration.name}`, `WhatsApp: ${registration.phone}`, `E-mail: ${registration.email}`,
+      `Distância: ${registration.distance}`, `Pacote: ${packageName(packageKey)}`,
+      ...(registration.shirtSize ? [`Tamanho da camisa: ${registration.shirtSize}`] : []),
+      `Valor: ${money(amount)}`, 'Pagamento: Pix', `Chave Pix (CNPJ): ${pixKey}`, '',
+      'Estou ciente de que a inscrição será confirmada após o retorno da organização e a confirmação do pagamento.'
+    ].join('\n');
+    const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+    const opened = window.open(url, '_blank', 'noopener,noreferrer');
+    $('form-message').textContent = 'Solicitação salva neste navegador. O WhatsApp foi aberto para você enviar a mensagem. A vaga ainda depende da confirmação da organização.';
+    if (!opened) $('form-message').textContent += ' Se o WhatsApp não abriu, permita pop-ups e tente novamente.';
+    form.reset(); updatePackage();
+  });
+  updatePackage();
+  if (location.hash === '#admin') showAdmin();
 })();
