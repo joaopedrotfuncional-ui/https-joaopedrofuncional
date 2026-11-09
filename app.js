@@ -13,7 +13,7 @@
   let activeEvent = null, settings = {pix_key:"52.244.653/0001-10",whatsapp:"(81) 99951-0223",card_checkout_url:""};
 
   function message(id, text, good=false){ const el=$(id); if(el){el.textContent=text;el.style.color=good?"#087a57":"#b04444";} }
-  function needConfig(){ if(!supabase){ const msg="A plataforma precisa ser conectada ao Supabase. Siga o arquivo LEIA-ME antes de receber inscrições."; if($("event-card")) $("event-card").innerHTML=`<div class="loading">${msg}</div>`; if($("registration-form")) $("registration-form").classList.add("hidden"); return true;} return false; }
+  function needConfig(){ if(!supabase){ if($("event-card")) $("event-card").innerHTML=""; if($("registration-form")) $("registration-form").classList.add("hidden"); return true;} return false; }
   function setPrice(){ if(!activeEvent)return; const pack=$("package").value; $("shirt-size-wrap").classList.toggle("hidden",pack!=="with_shirt"); $("shirt_size").required=pack==="with_shirt"; const value=pack==="no_shirt"?activeEvent.price_no_shirt:pack==="with_shirt"?activeEvent.price_with_shirt:null; $("total").textContent=value==null?"Selecione seu pacote":money(value); }
   async function loadPublic(){
     if(needConfig())return;
