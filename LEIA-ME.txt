@@ -24,3 +24,10 @@ Sem banco de dados ou servidor, os registros feitos nos celulares dos participan
 CORREÇÃO ADM: O formulário não enviava porque o campo de senha oculto
 continuava obrigatório. Agora os campos inativos são desabilitados.
 Acesse #admin ou clique Área ADM. O painel é local ao navegador.
+
+
+ATUALIZAÇÃO DO FORMULÁRIO:
+- Incluída a opção de pagamento por cartão de crédito. O site apenas registra a preferência
+  e envia a solicitação à organização pelo WhatsApp; não processa transações nem coleta dados do cartão.
+- Incluída declaração obrigatória de ciência dos riscos e aptidão para atividade física.
+- A declaração é enviada junto com a solicitação no WhatsApp.

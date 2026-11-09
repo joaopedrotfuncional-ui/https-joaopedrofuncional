@@ -111,6 +111,9 @@
       const tr = document.createElement('tr');
       const values = [new Date(row.createdAt).toLocaleString('pt-BR'), row.name, row.phone, row.distance, packageName(row.package) + (row.shirtSize ? ` (${row.shirtSize})` : ''), money(row.amount)];
       values.forEach(value => { const td = document.createElement('td'); td.textContent = value; tr.appendChild(td); });
+      const method = document.createElement('td');
+      method.textContent = row.paymentMethod || 'Pix';
+      tr.appendChild(method);
       const status = document.createElement('td');
       const select = document.createElement('select');
       ['Pendente','Pago'].forEach(label => { const option = document.createElement('option'); option.value = label; option.textContent = label; select.appendChild(option); });
@@ -128,8 +131,8 @@
   $('export-csv').addEventListener('click', () => {
     const rows = readRegistrations();
     if (!rows.length) { alert('Não há inscrições para exportar neste navegador.'); return; }
-    const headers = ['Data','Nome','WhatsApp','E-mail','Distância','Pacote','Tamanho','Valor','Pagamento'];
-    const csvRows = rows.map(r => [new Date(r.createdAt).toLocaleString('pt-BR'),r.name,r.phone,r.email,r.distance,packageName(r.package),r.shirtSize || '',money(r.amount),r.paymentStatus || 'Pendente']);
+    const headers = ['Data','Nome','WhatsApp','E-mail','Distância','Pacote','Tamanho','Valor','Forma de pagamento','Status do pagamento'];
+    const csvRows = rows.map(r => [new Date(r.createdAt).toLocaleString('pt-BR'),r.name,r.phone,r.email,r.distance,packageName(r.package),r.shirtSize || '',money(r.amount),r.paymentMethod || 'Pix',r.paymentStatus || 'Pendente']);
     const csv = [headers,...csvRows].map(line => line.map(v => `"${String(v ?? '').replace(/"/g,'""')}"`).join(';')).join('\r\n');
     const blob = new Blob(['\ufeff' + csv], {type:'text/csv;charset=utf-8;'});
     const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'inscritos-jp-sports.csv'; a.click(); URL.revokeObjectURL(url);
@@ -147,6 +150,7 @@
       name: String(data.get('full_name')).trim(), phone: String(data.get('phone')).trim(),
       email: String(data.get('email')).trim(), distance: data.get('distance'), package: packageKey,
       shirtSize: packageKey === 'with_shirt' ? data.get('shirt_size') : '', amount,
+      paymentMethod: String(data.get('payment_method') || 'Pix'),
       paymentStatus: 'Pendente'
     };
     const saved = readRegistrations(); saved.push(registration); saveRegistrations(saved);
