@@ -1,18 +1,21 @@
-JP SPORTS — GITHUB PAGES + WHATSAPP + PAINEL LOCAL
+JP SPORTS — GITHUB PAGES + WHATSAPP + PAINEL ADM LOCAL
 
-PUBLICAÇÃO
-1. Extraia o ZIP.
-2. Envie TODOS os arquivos desta pasta para a raiz do repositório GitHub.
-3. Settings > Pages > Deploy from a branch > main > /(root).
+IMPORTANTE: ESTA VERSAO NAO USA SUPABASE, GOOGLE SHEETS OU GOOGLE APPS SCRIPT.
+Nao precisa criar config.js nem colar URL de nenhum servico.
 
-INSCRIÇÃO
-O participante preenche os dados, o site salva uma cópia local no navegador e abre o WhatsApp +55 81 99951-0223 com a mensagem pronta. O participante ainda precisa tocar em ENVIAR no WhatsApp.
+COMO ATUALIZAR NO GITHUB PAGES
+1. Extraia este ZIP.
+2. Abra a pasta extraida.
+3. Envie TODOS os arquivos que estao diretamente dentro dela para a raiz do repositorio (onde fica o index.html).
+4. Substitua os arquivos antigos quando o GitHub perguntar.
+5. Faca Commit changes e aguarde o GitHub Pages publicar.
+6. Abra o site e atualize com Ctrl+Shift+R (Windows) ou Cmd+Shift+R (Mac).
+
+INSCRICOES
+O formulario salva uma copia local no navegador em que foi preenchido e abre o WhatsApp JP Sports (+55 81 99951-0223) com a mensagem pronta. O participante precisa tocar em ENVIAR no WhatsApp.
 
 PAINEL ADM
-Clique em Área ADM. No primeiro acesso naquele navegador, crie uma senha de pelo menos 8 caracteres. O painel mostra apenas as solicitações salvas naquele mesmo navegador/dispositivo. Permite marcar pagamento e exportar CSV.
+Clique em Area ADM. No primeiro acesso naquele navegador, crie uma senha de pelo menos 8 caracteres. O painel mostra somente solicitacoes salvas naquele mesmo navegador/dispositivo e permite exportar CSV.
 
-ATENÇÃO — LIMITAÇÃO SEM BANCO DE DADOS
-Esta versão NÃO sincroniza inscrições entre dispositivos. Os dados ficam no armazenamento local do navegador que preencheu o formulário. Portanto, inscrições feitas pelos celulares dos participantes NÃO aparecerão automaticamente no computador do administrador. Limpar dados do navegador pode apagar os registros. A senha também protege apenas o painel local, não substitui autenticação de servidor.
-
-EVENTO
-Treinão Novembro Azul do JP — 29/11/2026. Mercado da Torre – Live. Concentração 05:00, largada 05:30. 3 km e 5 km. Sem camisa R$ 59,90; com camisa R$ 99,90. Pix 52.244.653/0001-10.
+LIMITACAO IMPORTANTE
+Sem banco de dados ou servidor, os registros feitos nos celulares dos participantes NAO aparecem automaticamente no computador do administrador. A senha e os dados do painel ficam apenas no armazenamento local daquele navegador. Limpar os dados do navegador pode apagar os registros.
