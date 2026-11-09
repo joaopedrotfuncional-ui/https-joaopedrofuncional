@@ -25,10 +25,14 @@
   }
   packageSelect.addEventListener('change', updatePackage);
 
-  async function hashPassword(password) {
-    const bytes = new TextEncoder().encode(password);
-    const digest = await crypto.subtle.digest('SHA-256', bytes);
-    return Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('');
+  // Hash local simples para compatibilidade; isto não substitui autenticação de servidor.
+  function hashPassword(password) {
+    let hash = 2166136261;
+    for (let i = 0; i < password.length; i++) {
+      hash ^= password.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    return (hash >>> 0).toString(16);
   }
 
   function setAuthMode(mode) {
@@ -70,22 +74,28 @@
     showPublic();
   });
 
-  $('admin-auth-form').addEventListener('submit', async event => {
+  $('admin-auth-form').addEventListener('submit', event => {
     event.preventDefault();
     const first = !localStorage.getItem(PASSWORD_KEY);
     const message = $('login-message');
-    if (first) {
-      const password = $('new-password').value;
-      if (password.length < 8) { message.textContent = 'A senha precisa ter pelo menos 8 caracteres.'; return; }
-      if (password !== $('confirm-password').value) { message.textContent = 'As senhas não conferem.'; return; }
-      localStorage.setItem(PASSWORD_KEY, await hashPassword(password));
-    } else {
-      const entered = await hashPassword($('admin-password').value);
-      if (entered !== localStorage.getItem(PASSWORD_KEY)) { message.textContent = 'Senha incorreta.'; return; }
+    message.textContent = '';
+    try {
+      if (first) {
+        const password = $('new-password').value;
+        if (password.length < 8) { message.textContent = 'A senha precisa ter pelo menos 8 caracteres.'; return; }
+        if (password !== $('confirm-password').value) { message.textContent = 'As senhas não conferem.'; return; }
+        localStorage.setItem(PASSWORD_KEY, hashPassword(password));
+      } else {
+        const entered = hashPassword($('admin-password').value);
+        if (entered !== localStorage.getItem(PASSWORD_KEY)) { message.textContent = 'Senha incorreta.'; return; }
+      }
+      $('admin-auth-card').classList.add('hidden');
+      $('admin-dashboard').classList.remove('hidden');
+      renderDashboard();
+    } catch (error) {
+      message.textContent = 'Não foi possível abrir o painel neste navegador. Verifique se o armazenamento local está habilitado e tente novamente.';
+      console.error('Falha no acesso administrativo:', error);
     }
-    $('admin-auth-card').classList.add('hidden');
-    $('admin-dashboard').classList.remove('hidden');
-    renderDashboard();
   });
 
   function renderDashboard() {
