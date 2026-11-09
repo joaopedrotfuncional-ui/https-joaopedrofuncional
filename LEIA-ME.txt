@@ -19,3 +19,8 @@ Clique em Area ADM. No primeiro acesso naquele navegador, crie uma senha de pelo
 
 LIMITACAO IMPORTANTE
 Sem banco de dados ou servidor, os registros feitos nos celulares dos participantes NAO aparecem automaticamente no computador do administrador. A senha e os dados do painel ficam apenas no armazenamento local daquele navegador. Limpar os dados do navegador pode apagar os registros.
+
+
+CORREÇÃO ADM: O formulário não enviava porque o campo de senha oculto
+continuava obrigatório. Agora os campos inativos são desabilitados.
+Acesse #admin ou clique Área ADM. O painel é local ao navegador.

@@ -13,3 +13,11 @@ A área ADM permite criar uma senha local, consultar registros salvos naquele na
 
 ## Limitação
 Sem um banco de dados/servidor, os registros dos celulares dos participantes não são sincronizados com o navegador do administrador. Não use este painel local como lista centralizada de inscrições.
+
+
+## Correção da Área ADM
+Acesse a página inicial e clique em **Área ADM**, ou abra `#admin` ao final da URL.
+No primeiro acesso, crie uma senha de pelo menos 8 caracteres. A senha e os registros
+ficam apenas no navegador/dispositivo atual. Não é autenticação segura de servidor.
+**Inscrições de outros aparelhos não aparecem no painel**, pois o site não possui banco de dados.
+Para controle geral, confira as mensagens recebidas no WhatsApp.

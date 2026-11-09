@@ -39,6 +39,13 @@
     $('new-password-label').classList.toggle('hidden', !first);
     $('confirm-password-label').classList.toggle('hidden', !first);
     $('current-password-label').classList.toggle('hidden', first);
+    // Hidden required inputs still block native form submission unless disabled.
+    $('new-password').disabled = !first;
+    $('confirm-password').disabled = !first;
+    $('admin-password').disabled = first;
+    $('new-password').required = first;
+    $('confirm-password').required = first;
+    $('admin-password').required = !first;
     $('auth-submit').textContent = first ? 'Criar senha e acessar' : 'Entrar';
     $('login-message').textContent = '';
   }
@@ -54,8 +61,14 @@
     $('admin-view').classList.add('hidden');
     $('public-view').classList.remove('hidden');
   }
-  $('admin-open').addEventListener('click', showAdmin);
-  $('back-public').addEventListener('click', showPublic);
+  $('admin-open').addEventListener('click', () => {
+    history.replaceState(null, '', location.pathname + location.search + '#admin');
+    showAdmin();
+  });
+  $('back-public').addEventListener('click', () => {
+    history.replaceState(null, '', location.pathname);
+    showPublic();
+  });
 
   $('admin-auth-form').addEventListener('submit', async event => {
     event.preventDefault();
@@ -142,5 +155,8 @@
     form.reset(); updatePackage();
   });
   updatePackage();
-  if (location.hash === '#admin') showAdmin();
+  if (location.hash === '#admin' || new URLSearchParams(location.search).has('admin')) showAdmin();
+  window.addEventListener('hashchange', () => {
+    if (location.hash === '#admin') showAdmin();
+  });
 })();
