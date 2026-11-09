@@ -1,63 +1,24 @@
-JP SPORTS | PACOTE PARA PUBLICAR NA NETLIFY
-============================================
+JP SPORTS — VERSÃO SEM SUPABASE
+
+Esta versão não usa Supabase nem banco de dados. O formulário encaminha os dados
+preenchidos para o WhatsApp da organização (+55 81 99951-0223).
+
+COMO PUBLICAR
+1. Extraia este ZIP.
+2. Envie TODOS os arquivos desta pasta para a raiz do repositório GitHub.
+3. Em Settings > Pages, selecione Deploy from a branch, branch main e /(root).
+4. Aguarde a publicação.
 
 IMPORTANTE
-Este pacote contém a interface web estática e o SQL do backend Supabase.
-O site só gravará inscrições e protegerá o painel depois que você configurar
-o projeto Supabase e preencher config.js. Não publique para receber inscrições
-reais antes de completar esses passos e testar.
+- Ao enviar o formulário, o navegador abre o WhatsApp com uma mensagem pronta.
+- O participante ainda precisa apertar ENVIAR no WhatsApp.
+- A inscrição só será confirmada pela organização após retorno e confirmação do pagamento.
+- Não há painel administrativo, banco de dados ou lista automática de inscritos.
+- Para manter uma lista centralizada e exportável, será necessário um serviço de armazenamento/backend.
 
-1) CONFIGURAR O SUPABASE
-- Abra https://supabase.com e entre/crie seu projeto.
-- No painel do projeto, abra SQL Editor > New query.
-- Abra schema.sql deste pacote, copie todo o conteúdo e execute.
-- Em Authentication > Providers > Email, habilite cadastro por e-mail e confirmação de e-mail.
-- Em Authentication > URL Configuration, configure Site URL com a URL pública
-  da Netlify e adicione https://SEU-SITE.netlify.app/admin em Redirect URLs.
-- Após publicar, acesse /admin e clique em "Criar minha senha de administrador".
-  O formulário aceita somente joaopedrotfuncional@gmail.com.
-  Confirme a mensagem enviada ao e-mail para ativar a conta.
-- Se a conta já existir, use "Esqueci minha senha" no próprio site.
-- IMPORTANTE: criação de contas depende da configuração do Supabase e de
-  limites/proteções contra abuso de cadastro configurados no projeto.
-- Em Project Settings > API, copie:
-  Project URL
-  anon / publishable key (chave pública)
-- Edite config.js e substitua:
-  COLE_AQUI_A_URL_DO_SUPABASE
-  COLE_AQUI_A_CHAVE_ANON_PUBLICA
-  Não coloque a service_role key no navegador.
-
-2) PUBLICAR NA NETLIFY
-- Extraia o ZIP no computador.
-- Abra https://app.netlify.com/drop
-- Arraste a pasta jp_sports_netlify (a pasta que contém index.html, styles.css,
-  app.js, config.js e _redirects) para a área de upload.
-- Aguarde o deploy. A Netlify dará um endereço terminado em .netlify.app.
-- A rota /admin abre o painel. A página inicial / abre as inscrições.
-- Se alterar config.js depois, faça um novo deploy arrastando a pasta atualizada.
-
-3) CONFIGURAR O CARTÃO
-- Entre em /admin com o usuário administrador.
-- Cole o link externo de checkout no campo "Link de pagamento no cartão".
-- O site não coleta número de cartão nem CVV. O pagamento ocorre no checkout
-  externo. Até o link ser configurado, a opção cartão fica desativada.
-
-4) PIX E INSCRIÇÕES
-- A chave Pix inicial é o CNPJ 52.244.653/0001-10.
-- O cadastro por Pix fica pendente até você confirmar o recebimento.
-- O painel permite atualizar status, consultar inscritos e exportar CSV.
-
-5) SEGURANÇA
-- A chave anon/public é própria para uso no navegador com RLS ativo.
-- NUNCA use a chave service_role no config.js.
-- A política de banco permite que visitantes vejam somente evento ativo e
-  enviem inscrições pela função register_participant. Visitantes não podem
-  consultar a lista de inscritos.
-- Somente o e-mail joaopedrotfuncional@gmail.com é autorizado pelas políticas
-  de administração deste pacote.
-- Ative confirmação de e-mail e use senha forte na conta de administrador.
-
-BUILD
-Este é um pacote estático: não precisa rodar npm install nem executar build.
-A pasta a enviar para Netlify contém index.html na raiz.
+EVENTO CONFIGURADO
+Treinão Novembro Azul do JP — 29/11/2026
+Mercado da Torre – Live | Concentração 05:00 | Largada 05:30
+Distâncias: 3 km e 5 km
+Sem camisa: R$ 59,90 | Com camisa azul: R$ 99,90
+Pix: 52.244.653/0001-10

@@ -1,63 +1,34 @@
-# JP Sports — Plataforma de inscrições
+# JP Sports — Inscrições pelo WhatsApp
 
-Plataforma estática de inscrições para eventos JP Sports, com painel administrativo e integração com Supabase.
+Página estática para divulgar o Treinão Novembro Azul do JP e encaminhar solicitações de inscrição diretamente ao WhatsApp da organização.
 
 ## Publicar no GitHub Pages
 
-Este projeto foi adaptado para funcionar em um repositório de projeto do GitHub Pages, no endereço:
+1. Extraia o ZIP.
+2. Envie todos os arquivos desta pasta para a raiz do repositório `https-joaopedrofuncional`.
+3. No GitHub, abra **Settings → Pages**.
+4. Em **Build and deployment**, escolha **Deploy from a branch**, branch `main` e pasta `/(root)`.
+5. Aguarde a publicação.
 
-`https://joaopedrotfuncional-ui.github.io/https-joaopedrofuncional/`
+Endereço esperado: `https://joaopedrotfuncional-ui.github.io/https-joaopedrofuncional/`
 
-1. Extraia o ZIP e abra a pasta `jp_sports_netlify`.
-2. Envie **todos os arquivos que estão dentro dessa pasta** para a raiz do repositório `https-joaopedrofuncional` (não envie a pasta `jp_sports_netlify` como uma subpasta).
-3. Confirme que `index.html`, `app.js`, `styles.css` e `config.js` aparecem diretamente na raiz do repositório.
-4. No GitHub, abra **Settings → Pages**.
-5. Em **Build and deployment**, selecione **Deploy from a branch**, branch `main` e pasta `/(root)`, depois salve.
-6. Aguarde o GitHub Pages concluir a publicação.
+## Como funciona
 
-O arquivo `.nojekyll` evita que o Jekyll ignore arquivos e diretórios do site. Os caminhos dos recursos são relativos, para funcionar no subdiretório do projeto.
+- Não utiliza Supabase, banco de dados, autenticação ou chaves de API.
+- O formulário valida os dados no navegador e abre uma conversa no WhatsApp `+55 81 99951-0223` com os dados preenchidos.
+- A pessoa precisa tocar em **Enviar** no WhatsApp para encaminhar a solicitação.
+- A organização confirma a vaga e o pagamento manualmente.
+- As inscrições não ficam armazenadas em um painel administrativo nem em uma planilha automaticamente.
 
-## Endereços
+## Dados configurados
 
-- Página pública: `https://joaopedrotfuncional-ui.github.io/https-joaopedrofuncional/`
-- Painel administrativo: `https://joaopedrotfuncional-ui.github.io/https-joaopedrofuncional/?admin=1`
+- Evento: Treinão Novembro Azul do JP
+- Data: 29/11/2026
+- Local: Mercado da Torre – Live
+- Concentração: 05:00 | Largada: 05:30
+- Distâncias: 3 km e 5 km
+- Sem camisa: R$ 59,90
+- Com camisa azul: R$ 99,90
+- Pix: 52.244.653/0001-10
 
-O GitHub Pages não oferece rotas de servidor como `/admin`; por isso o painel usa o parâmetro `?admin=1`.
-
-## Configurar Supabase
-
-1. No Supabase, execute todo o arquivo `schema.sql` no **SQL Editor**.
-2. Em **Authentication → URL Configuration**, configure a `Site URL` para `https://joaopedrotfuncional-ui.github.io`.
-3. Adicione às Redirect URLs permitidas o endereço completo do site e o endereço do painel:
-   - `https://joaopedrotfuncional-ui.github.io/https-joaopedrofuncional/`
-   - `https://joaopedrotfuncional-ui.github.io/https-joaopedrofuncional/?admin=1`
-4. Em **Project Settings → API**, copie a Project URL e a chave pública `anon`/publishable.
-5. Edite `config.js` e substitua os dois valores de exemplo.
-6. Envie o `config.js` atualizado para a raiz do repositório.
-7. Em **Authentication → Providers → Email**, habilite o provedor de e-mail.
-8. Abra o painel pelo endereço com `?admin=1` e use **Criar minha senha de administrador**.
-
-Exemplo de `config.js`:
-
-```js
-window.JP_CONFIG = {
-  SUPABASE_URL: "https://SEU-PROJETO.supabase.co",
-  SUPABASE_ANON_KEY: "SUA_CHAVE_PUBLICA"
-};
-```
-
-Nunca coloque `service_role`, secret key, senha do banco ou tokens privados no navegador ou no GitHub. A chave pública só deve ser usada com as políticas RLS e funções seguras do `schema.sql` corretamente configuradas.
-
-## Funcionalidades
-
-- Página pública para consultar o evento ativo e realizar inscrições.
-- Seleção de distância e pacote, com tamanho de camisa condicional.
-- Registro por função RPC segura no Supabase.
-- Painel administrativo para gerenciar eventos, pagamentos e inscrições.
-- Exportação de inscritos em CSV.
-- Configuração de Pix, WhatsApp e checkout externo.
-- Criação e recuperação de senha do administrador pelo Supabase Auth.
-
-## Licença
-
-Consulte `LICENSE`. Todos os direitos reservados à JP Sports.
+Para alterar telefone, preços ou dados do evento, edite `app.js` e `index.html`.
